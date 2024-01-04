@@ -1,0 +1,86 @@
+swagger: '2.0'
+info:
+  version: "1.0.0"
+  title: "Online Shopping Store"
+paths:
+  /api/auth/signup:
+    post:
+      tags:
+      - "Auth"
+      summary: "User signup"
+      description: "This endpoint allows users to create a new account."
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "User object that needs to be registered"
+        required: true
+        schema:
+          type: "object"
+          required:
+            - "username"
+            - "password"
+          properties:
+            username:
+              type: "string"
+            password:
+              type: "string"
+      responses:
+        "201":
+          description: "User created successfully"
+          schema:
+            type: "object"
+            properties:
+              user:
+                $ref: '#/definitions/User'
+              token:
+                type: "string"
+        "400":
+          description: "User already exists"
+        "500":
+          description: "Internal Server Error"
+
+  /api/auth/login:
+    post:
+      tags:
+      - "Auth"
+      summary: "User login"
+      description: "This endpoint allows users to log in to their account."
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "User's login credentials"
+        required: true
+        schema:
+          type: "object"
+          required:
+            - "username"
+            - "password"
+          properties:
+            username:
+              type: "string"
+            password:
+              type: "string"
+      responses:
+        "200":
+          description: "Login successful"
+          schema:
+            type: "object"
+            properties:
+              user:
+                $ref: '#/definitions/User'
+              token:
+                type: "string"
+        "400":
+          description: "Invalid credentials"
+        "500":
+          description: "Internal Server Error"
+
+
