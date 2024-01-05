@@ -21,7 +21,7 @@ exports.signup = async (req, res) => {
         await user.save();
 
         const token = generateAuthToken(user);
-        res.status(201).send({ user, token });
+        res.status(201).send({  token });
     } catch (error) {
         res.status(500).send({ message: 'Internal Server Error', error: error.message });
     }
@@ -43,7 +43,7 @@ exports.login = async (req, res) => {
         }
 
         const token = generateAuthToken(user);
-        res.send({ user, token });
+        res.send({ token });
     } catch (error) {
         res.status(500).send({ message: 'Internal Server Error', error: error.message });
     }
