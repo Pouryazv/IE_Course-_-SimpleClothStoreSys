@@ -1,86 +1,408 @@
-swagger: '2.0'
+openapi: 3.0.0
 info:
-  version: "1.0.0"
-  title: "Online Shopping Store"
+  title: Clothes Store API
+  version: 1.0.0
 paths:
-  /api/auth/signup:
+  /signup:
+    post:
+      summary: User signup
+      description: Register a new user in the system.
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  description: The username for the new user
+                password:
+                  type: string
+                  description: The password for the new user
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserTokenResponse'
+        '400':
+          description: Bad request (e.g., user already exists)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  
+  /login:
+    post:
+      summary: User login
+      description: Authenticate a user and return a token.
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  description: The username of the user
+                password:
+                  type: string
+                  description: The password of the user
+      responses:
+        '200':
+          description: User logged in successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserTokenResponse'
+        '400':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+
+  /add-clothes:
+    post:
+      summary: Add a new clothing item to the store
+      description: This endpoint allows authenticated users to add new clothing items to their store.
+      tags:
+        - Clothes
+      parameters:
+        - in: header
+          name: uthorization
+          required: true
+          schema:
+            type: string
+          description: Bearer <token>
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - material
+                - price
+                - discount
+              properties:
+                name:
+                  type: string
+                  description: The name of the clothing item
+                material:
+                  type: string
+                  enum: [Linen, Denim, Cotton, Leather]
+                  description: The material of the clothing item
+                price:
+                  type: number
+                  format: double
+                  description: The price of the clothing item
+                discount:
+                  type: number
+                  format: float
+                  description: The discount on the clothing item in percentage
+      responses:
+        '201':
+          description: Successfully added the clothing item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Clothes'
+        '400':
+          description: Error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /edit-clothes/{id}:
+    patch:
+      tags:
+        - Clothes
+      summary: Edit a clothes item
+      description: Allows authenticated users to edit details of a specific clothes item
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: uthorization
+          required: true
+          schema:
+            type: string
+          description: Bearer <token>
+        - name: id
+          in: path
+          required: true
+          type: string
+          description: The ID of the clothes item to edit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                material:
+                  type: string
+                  enum: [Linen, Denim, Cotton, Leather]
+                price:
+                  type: number
+                discount:
+                  type: number
+                  minimum: 0
+                  maximum: 100
+      responses:
+        200:
+          description: Successfully updated the clothes item
+          schema:
+            $ref: '#/definitions/Clothes'
+        400:
+          description: Invalid input or error in updating the item
+        403:
+          description: Unauthorized to edit this clothes item
+        404:
+          description: Clothes item not found
+
+
+  /get-clothes/{id}:
+    get:
+      tags:
+        - Clothes
+      summary: Get a specific clothes item
+      description: Retrieves details of a specific clothes item by its ID
+      produces:
+        - application/json
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          description: The ID of the clothes item to retrieve
+      responses:
+        200:
+          description: Successfully retrieved the clothes item
+          schema:
+            $ref: '#/definitions/Clothes'
+        404:
+          description: Clothes item not found
+        500:
+          description: Server error or problem retrieving the item
+
+
+
+  /get-final-price/{id}:
+    get:
+      tags:
+        - Clothes
+      summary: Get the final price of a clothes item
+      description: Retrieves the final price of a clothes item after applying the discount
+      produces:
+        - application/json
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: string
+          description: The ID of the clothes item for which the final price is to be calculated
+      responses:
+        200:
+          description: Successfully calculated the final price
+          schema:
+            type: object
+            properties:
+              finalPrice:
+                type: number
+                format: double
+                description: The final price of the clothes item after the discount
+        404:
+          description: Clothes item not found
+        500:
+          description: Server error or problem in calculating the final price
+
+
+
+  /delete-clothes/{id}:
+    delete:
+      tags:
+        - Clothes
+      summary: Delete a clothes item
+      description: Allows authenticated users to delete a specific clothes item
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: uthorization
+          required: true
+          schema:
+            type: string
+          description: Bearer <token>
+        - name: id
+          in: path
+          required: true
+          type: string
+          description: The ID of the clothes item to delete
+      responses:
+        200:
+          description: Successfully deleted the clothes item
+        403:
+          description: Unauthorized to delete this clothes item
+        404:
+          description: Clothes item not found
+        500:
+          description: Server error or problem deleting the item
+
+  /delete-all-clothes:
+    delete:
+      tags:
+        - Clothes
+      summary: Delete all clothes items of a specific owner
+      description: Allows authenticated users to delete all clothes items they own
+      produces:
+        - application/json
+      parameters:
+        - in: header
+          name: uthorization
+          required: true
+          schema:
+            type: string
+          description: Bearer <token>
+      responses:
+        200:
+          description: Successfully deleted all clothes items of the owner
+        403:
+          description: Unauthorized to delete clothes items
+        500:
+          description: Server error or problem deleting the items
+
+    
+
+security:
+  - auth: []
+
+
+components:
+  schemas:
+    UserTokenResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        token:
+          type: string
+          description: Authentication token for the user
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: uuid
+          description: Unique identifier for the user
+        username:
+          type: string
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+    Clothes:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: uuid
+          description: The unique identifier for the clothing item
+        name:
+          type: string
+        material:
+          type: string
+        price:
+          type: number
+        discount:
+          type: number
+        owner:
+          type: string
+          format: uuid
+
+securitySchemes:
+  bearerAuth:
+    type: http
+    scheme: bearer
+    bearerFormat: JWT
+definitions:
+  Clothes:
+    type: object
+    required:
+      - name
+      - material
+      - price
+      - discount
+    properties:
+      name:
+        type: string
+      material:
+        type: string
+        enum: [Linen, Denim, Cotton, Leather]
+      price:
+        type: integer
+      discount:
+        type: integer
+        format: int32
+        minimum: 0
+        maximum: 100
+      owner:
+        type: string
     post:
       tags:
-      - "Auth"
-      summary: "User signup"
-      description: "This endpoint allows users to create a new account."
+        - clothes
+      summary: Add a new clothing item
+      description: Endpoint to add a new clothing item to the store
+      operationId: addClothes
       consumes:
-      - "application/json"
+        - application/json
       produces:
-      - "application/json"
+        - application/json
       parameters:
-      - in: "body"
-        name: "body"
-        description: "User object that needs to be registered"
-        required: true
-        schema:
-          type: "object"
-          required:
-            - "username"
-            - "password"
-          properties:
-            username:
-              type: "string"
-            password:
-              type: "string"
-      responses:
-        "201":
-          description: "User created successfully"
+        - in: body
+          name: body
+          description: Clothing object that needs to be added to the store
+          required: true
           schema:
-            type: "object"
-            properties:
-              user:
-                $ref: '#/definitions/User'
-              token:
-                type: "string"
-        "400":
-          description: "User already exists"
-        "500":
-          description: "Internal Server Error"
-
-  /api/auth/login:
-    post:
-      tags:
-      - "Auth"
-      summary: "User login"
-      description: "This endpoint allows users to log in to their account."
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
-      parameters:
-      - in: "body"
-        name: "body"
-        description: "User's login credentials"
-        required: true
-        schema:
-          type: "object"
-          required:
-            - "username"
-            - "password"
-          properties:
-            username:
-              type: "string"
-            password:
-              type: "string"
+            $ref: '#/definitions/Clothes'
       responses:
-        "200":
-          description: "Login successful"
+        '201':
+          description: Clothing item successfully added
           schema:
-            type: "object"
-            properties:
-              user:
-                $ref: '#/definitions/User'
-              token:
-                type: "string"
-        "400":
-          description: "Invalid credentials"
-        "500":
-          description: "Internal Server Error"
-
-
+            $ref: '#/definitions/Clothes'
+        '400':
+          description: Invalid input
+        '401':
+          description: Authentication error
